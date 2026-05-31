@@ -394,58 +394,6 @@
                         <textarea id="bookNotesInput" rows="3" class="w-full bg-stone-50 border border-stone-200 rounded-lg p-2.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all placeholder:text-stone-400" placeholder="Type down your thoughts, inspiring expressions, or general impressions..."></textarea>
                     </div>
 
-                    <!-- Book Cover Image Section -->
-                    <div class="border-t border-stone-100 pt-4 space-y-4">
-                        <label class="block text-[11px] font-extrabold text-stone-500 uppercase tracking-widest">Book Cover Art</label>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
-                            <!-- Visual box showing live image preview -->
-                            <div class="md:col-span-4 flex justify-center">
-                                <div id="formCoverImagePreview" class="w-24 h-32 bg-stone-50 border border-stone-200 rounded-lg shadow-inner flex flex-col items-center justify-center text-center p-3 overflow-hidden relative">
-                                    <!-- Dynamic SVG fallback, uploaded graphic inside -->
-                                </div>
-                            </div>
-
-                            <!-- Source switcher choices -->
-                            <div class="md:col-span-8 space-y-3">
-                                <div class="flex gap-2">
-                                    <button type="button" id="setSourceUploadBtn" class="flex-1 py-1.5 px-3 text-xs font-bold rounded-lg border border-stone-200 hover:bg-stone-50 focus:outline-none bg-stone-100 text-stone-900 border-stone-300">
-                                        <i class="fa-solid fa-upload mr-1 text-stone-500"></i>Upload File
-                                    </button>
-                                    <button type="button" id="setSourceAIBtn" class="flex-1 py-1.5 px-3 text-xs font-bold rounded-lg border border-stone-200 hover:bg-stone-50 focus:outline-none">
-                                        <i class="fa-solid fa-wand-magic-sparkles mr-1 text-amber-500"></i>AI Cover
-                                    </button>
-                                </div>
-
-                                <!-- Local upload file pane -->
-                                <div id="uploadSourcePanel" class="space-y-1">
-                                    <label class="flex flex-col items-center justify-center w-full h-16 border-2 border-stone-200 border-dashed rounded-lg cursor-pointer bg-stone-50 hover:bg-stone-100/50 transition-all">
-                                        <div class="flex flex-col items-center justify-center text-center px-4">
-                                            <i class="fa-solid fa-cloud-arrow-up text-stone-400 text-sm mb-1"></i>
-                                            <p class="text-[10px] text-stone-500 font-bold">Select book cover photo</p>
-                                        </div>
-                                        <!-- Built-in compression and base64 parsing happens on change event -->
-                                        <input type="file" id="bookCoverFileInput" accept="image/*" class="hidden">
-                                    </label>
-                                </div>
-
-                                <!-- AI Cover input settings pane -->
-                                <div id="aiSourcePanel" class="hidden space-y-2">
-                                    <div class="flex gap-1.5">
-                                        <input type="text" id="aiCoverPromptField" class="flex-grow bg-stone-50 border border-stone-200 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder:text-stone-400" placeholder="Optional art style e.g. 'Watercolor'">
-                                        <button type="button" id="triggerAICoverGenBtn" class="bg-amber-600 hover:bg-amber-500 text-white font-bold px-3 rounded-lg text-[10px] uppercase tracking-wider transition-colors flex items-center justify-center gap-1">
-                                            <span id="aiGenCoverBtnText">Generate</span>
-                                            <i class="fa-solid fa-sparkles"></i>
-                                        </button>
-                                    </div>
-                                    <p class="text-[9px] text-stone-400 leading-normal">Our system uses Imagen 4.0 to generate a custom book cover mockup based on your title and author names.</p>
-                                </div>
-
-                                <input type="hidden" id="bookCoverDataURL">
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Trigger deck -->
                     <div class="border-t border-stone-100 pt-4 flex justify-end gap-2.5">
                         <button type="button" id="cancelFormBtn" class="bg-stone-100 hover:bg-stone-200 text-stone-700 px-4 py-2 rounded-xl text-xs font-bold transition-all">
@@ -494,7 +442,6 @@
         let selectedYear = "2026";
         let yearlyGoal = 12;
         let activeFilter = "all";
-        let activeCoverSourceType = "upload";
         let activeGeneratedReportValue = "";
         let audioContext = null;
 
@@ -618,9 +565,9 @@
 
         function getCoreSeedBooks() {
             return [
-                { id: "seed-1", title: "Cien años de soledad", author: "Gabriel García Márquez", category: "Favorite", rating: 5, notes: "A masterclass in magical realism, generational patterns, and beautiful, haunting prose.", cover: "", year: "2026" },
-                { id: "seed-2", title: "Dune", author: "Frank Herbert", category: "In-Progress", rating: 0, notes: "Complex world-building and ecology structures. Fascinating political power dynamics.", cover: "", year: "2026" },
-                { id: "seed-3", title: "The Hobbit", author: "J.R.R. Tolkien", category: "Complete", rating: 4, notes: "An absolute delight. Bilbo Baggins is the best companion for a rainy day.", cover: "", year: "2026" }
+                { id: "seed-1", title: "Cien años de soledad", author: "Gabriel García Márquez", category: "Favorite", rating: 5, notes: "A masterclass in magical realism, generational patterns, and beautiful, haunting prose.", year: "2026" },
+                { id: "seed-2", title: "Dune", author: "Frank Herbert", category: "In-Progress", rating: 0, notes: "Complex world-building and ecology structures. Fascinating political power dynamics.", year: "2026" },
+                { id: "seed-3", title: "The Hobbit", author: "J.R.R. Tolkien", category: "Complete", rating: 4, notes: "An absolute delight. Bilbo Baggins is the best companion for a rainy day.", year: "2026" }
             ];
         }
 
@@ -692,11 +639,6 @@
                 renderShelfUI();
             });
 
-            // Dynamic Modal Form Live Cover Auto-renderer
-            document.getElementById('bookTitleInput').addEventListener('input', triggerFormPreviewUpdate);
-            document.getElementById('bookAuthorInput').addEventListener('input', triggerFormPreviewUpdate);
-            document.getElementById('bookCategoryInput').addEventListener('change', triggerFormPreviewUpdate);
-
             // Star selectors binding
             document.querySelectorAll('.star-interactive-btn').forEach(star => {
                 star.addEventListener('click', (e) => {
@@ -716,16 +658,6 @@
 
             // Import File input Action
             document.getElementById('importBackupFile').addEventListener('change', importLibraryJSON);
-
-            // Image Cover Upload change handler
-            document.getElementById('bookCoverFileInput').addEventListener('change', handleUploadChange);
-
-            // Source Switchers Inside Form
-            document.getElementById('setSourceUploadBtn').addEventListener('click', () => setSourcePane('upload'));
-            document.getElementById('setSourceAIBtn').addEventListener('click', () => setSourcePane('ai'));
-
-            // AI Cover art generator triggers
-            document.getElementById('triggerAICoverGenBtn').addEventListener('click', generateAICoverArt);
 
             // AI Reading insights triggers
             document.getElementById('generateInsightsBtn').addEventListener('click', renderAIInsightsReport);
@@ -750,126 +682,12 @@
             });
         }
 
-        // Tab selection wrapper inside book metadata modal
-        function setSourcePane(source) {
-            activeCoverSourceType = source;
-            const btnUpload = document.getElementById('setSourceUploadBtn');
-            const btnAI = document.getElementById('setSourceAIBtn');
-            const panelUpload = document.getElementById('uploadSourcePanel');
-            const panelAI = document.getElementById('aiSourcePanel');
-
-            if (source === 'upload') {
-                btnUpload.className = "flex-1 py-1.5 px-3 text-xs font-bold rounded-lg border hover:bg-stone-50 focus:outline-none bg-stone-100 text-stone-900 border-stone-300";
-                btnAI.className = "flex-1 py-1.5 px-3 text-xs font-bold rounded-lg border border-stone-200 hover:bg-stone-50 focus:outline-none";
-                panelUpload.classList.remove('hidden');
-                panelAI.classList.add('hidden');
-            } else {
-                btnAI.className = "flex-1 py-1.5 px-3 text-xs font-bold rounded-lg border hover:bg-stone-50 focus:outline-none bg-stone-100 text-stone-900 border-stone-300";
-                btnUpload.className = "flex-1 py-1.5 px-3 text-xs font-bold rounded-lg border border-stone-200 hover:bg-stone-50 focus:outline-none";
-                panelAI.classList.remove('hidden');
-                panelUpload.classList.add('hidden');
-            }
-        }
-
-        // Live Preview trigger inside Modal
-        function triggerFormPreviewUpdate() {
-            const rawCover = document.getElementById('bookCoverDataURL').value;
-            const container = document.getElementById('formCoverImagePreview');
-            
-            if (rawCover) {
-                container.innerHTML = `<img src="${rawCover}" class="w-full h-full object-cover rounded-md" alt="Preview art">`;
-            } else {
-                const title = document.getElementById('bookTitleInput').value || "Book Title";
-                const author = document.getElementById('bookAuthorInput').value || "Author";
-                const category = document.getElementById('bookCategoryInput').value;
-                container.innerHTML = generatePlaceholderSVG(title, author, category);
-            }
-        }
-
-        // Client-side image compress process (Ensures 100% total compatibility with localStorage limits)
-        function handleUploadChange(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const img = new Image();
-                img.onload = function() {
-                    // Force compress images down to compact book aspect ratio ~240x320 at standard quality
-                    const canvas = document.createElement('canvas');
-                    canvas.width = 240;
-                    canvas.height = 320;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, 240, 320);
-                    
-                    // Compress JPEG data URL at 70% quality to output ultra-efficient storage size
-                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
-                    
-                    document.getElementById('bookCoverDataURL').value = compressedBase64;
-                    triggerFormPreviewUpdate();
-                    showSystemToast("Book Cover image parsed and compressed!", "success");
-                };
-                img.src = event.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        // Call Imagen 4.0 API to generate premium customized cover mockups with robustness
-        async function generateAICoverArt() {
-            const title = document.getElementById('bookTitleInput').value.trim();
-            const author = document.getElementById('bookAuthorInput').value.trim();
-
-            if (!title) {
-                showSystemToast("Please enter a book title first to guide the art model.", "warning");
-                return;
-            }
-
-            const promptExtraStyle = document.getElementById('aiCoverPromptField').value.trim();
-            const fullPromptText = `Highly stylized book cover illustration for "${title}" by ${author}. Style profile: ${promptExtraStyle ? promptExtraStyle : 'Flat minimal vector art graphic design, rich colors, beautiful typographic design. Clean award-winning illustration style'}. High aesthetic detail.`;
-
-            const btnText = document.getElementById('aiGenCoverBtnText');
-            const originalHTML = btnText.innerHTML;
-            btnText.innerText = "Cooking...";
-
-            try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`;
-                const responseData = await queryGeminiAPI(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        instances: [{ prompt: fullPromptText }],
-                        parameters: { sampleCount: 1, aspectRatio: "3:4" }
-                    })
-                });
-
-                if (responseData.predictions && responseData.predictions[0]) {
-                    const encodedBytes = responseData.predictions[0].bytesBase64Encoded;
-                    const cleanDataURL = `data:image/png;base64,${encodedBytes}`;
-                    
-                    // Save and render
-                    document.getElementById('bookCoverDataURL').value = cleanDataURL;
-                    triggerFormPreviewUpdate();
-                    showSystemToast("Premium AI book cover compiled successfully!", "success");
-                } else {
-                    throw new Error("No predictions found in response");
-                }
-            } catch (err) {
-                console.error("AI cover generation error: ", err);
-                showSystemToast("Could not contact Imagen API. Check console or configuration.", "error");
-            } finally {
-                btnText.innerHTML = originalHTML;
-            }
-        }
-
         // Modal Action Creators
         function openAddModal() {
             document.getElementById('bookIdHiddenField').value = "";
             document.getElementById('bookForm').reset();
             updateStarSelectorDisplay(0);
-            document.getElementById('bookCoverDataURL').value = "";
             document.getElementById('modalTitle').innerText = "Log a New Book";
-            setSourcePane('upload');
-            triggerFormPreviewUpdate();
 
             const modal = document.getElementById('bookModal');
             modal.classList.remove('hidden');
@@ -889,11 +707,8 @@
             document.getElementById('bookCategoryInput').value = b.category;
             updateStarSelectorDisplay(b.rating || 0);
             document.getElementById('bookNotesInput').value = b.notes || "";
-            document.getElementById('bookCoverDataURL').value = b.cover || "";
 
             document.getElementById('modalTitle').innerText = "Edit Book Log Entry";
-            setSourcePane('upload');
-            triggerFormPreviewUpdate();
 
             const modal = document.getElementById('bookModal');
             modal.classList.remove('hidden');
@@ -922,7 +737,6 @@
             const category = document.getElementById('bookCategoryInput').value;
             const rating = parseInt(document.getElementById('bookRatingHiddenInput').value) || 0;
             const notes = document.getElementById('bookNotesInput').value.trim();
-            const cover = document.getElementById('bookCoverDataURL').value;
 
             const structuredData = {
                 title,
@@ -930,7 +744,6 @@
                 category,
                 rating,
                 notes,
-                cover,
                 year: selectedYear
             };
 
@@ -1080,12 +893,7 @@
                 if (book.category === "In-Progress") catClass = "bg-blue-100 text-blue-800 border border-blue-200/50";
                 if (book.category === "Paused") catClass = "bg-rose-100 text-rose-800 border border-rose-200/50";
 
-                let graphicHTML = "";
-                if (book.cover) {
-                    graphicHTML = `<img src="${book.cover}" class="w-full h-full object-cover rounded-lg shadow-sm" alt="Book cover">`;
-                } else {
-                    graphicHTML = generatePlaceholderSVG(book.title, book.author, book.category);
-                }
+                let graphicHTML = generatePlaceholderSVG(book.title, book.author, book.category);
 
                 let starsHTML = "";
                 for (let i = 1; i <= 5; i++) {
