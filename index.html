@@ -276,58 +276,12 @@
                 </div>
                 <div>
                     <h3 class="text-lg font-bold text-stone-900 serif-title">Your reading log is empty</h3>
-                    <p class="text-xs text-stone-500 max-w-sm mx-auto mt-1">Start cataloging your favorite literature. Upload cover graphics or use our premium AI features to construct stylized mock book covers!</p>
+                    <p class="text-xs text-stone-500 max-w-sm mx-auto mt-1">Start cataloging your favorite literature.</p>
                 </div>
                 <button id="emptyStateTriggerBtn" class="bg-brand-800 hover:bg-brand-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 mx-auto">
                     <i class="fa-solid fa-plus"></i>
                     <span>Log Your First Book</span>
                 </button>
-            </div>
-        </section>
-
-        <!-- AI Core companion Panel (Generates personalized text or speech analysis) -->
-        <section class="bg-gradient-to-br from-stone-900 to-stone-950 text-stone-100 rounded-2xl p-6 md:p-8 shadow-xl relative overflow-hidden">
-            <div class="absolute right-0 bottom-0 opacity-[0.03] pointer-events-none translate-x-12 translate-y-12">
-                <i class="fa-solid fa-brain-circuit text-[240px]"></i>
-            </div>
-
-            <div class="max-w-2xl space-y-4 relative z-10">
-                <div class="inline-flex items-center gap-2 bg-amber-500/10 text-amber-300 border border-amber-500/20 px-3 py-1 rounded-full text-xs font-semibold">
-                    <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i>
-                    <span>AI Copilot Engine</span>
-                </div>
-                <h2 class="text-2xl md:text-3xl font-extrabold serif-title tracking-tight text-white">Generate Personalized Reading Insights</h2>
-                <p class="text-xs md:text-sm text-stone-400 leading-relaxed">Let Gemini evaluate your books logs, assess your reading themes, suggest 5 personalized books you should read next, and generate full speech reports.</p>
-                
-                <div class="flex flex-wrap gap-3 pt-2">
-                    <button id="generateInsightsBtn" class="bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold px-5 py-2.5 rounded-xl text-xs transition-all shadow-md flex items-center gap-2">
-                        <span id="insightsBtnText">Analyze Current Shelf</span>
-                        <i class="fa-solid fa-sparkles"></i>
-                    </button>
-                    <button id="voiceSynthBtn" class="hidden bg-stone-800 hover:bg-stone-700 text-stone-100 font-bold px-4 py-2.5 rounded-xl text-xs transition-all border border-stone-700 flex items-center gap-2">
-                        <i class="fa-solid fa-volume-high"></i>
-                        <span>Listen to Analysis</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Deep Output insights block -->
-            <div id="aiAnalysisOutputContainer" class="hidden mt-8 pt-6 border-t border-stone-850 space-y-4 relative z-10">
-                <div class="bg-stone-850/60 backdrop-blur border border-stone-800 rounded-xl p-5 md:p-6 text-stone-300">
-                    <div class="flex items-center justify-between mb-4 pb-3 border-b border-stone-800">
-                        <div class="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wide">
-                            <i class="fa-solid fa-chart-line text-sm"></i>
-                            <span>Gemini Cognitive Report</span>
-                        </div>
-                        <button id="clearInsightsBtn" class="text-[11px] text-stone-500 hover:text-stone-300 transition-colors">
-                            <i class="fa-solid fa-trash-can mr-1"></i>Clear Report
-                        </button>
-                    </div>
-                    <!-- Analysis response output -->
-                    <div id="aiAnalysisBody" class="prose prose-invert text-stone-300 text-xs leading-relaxed max-w-none space-y-3.5">
-                        <!-- Filled dynamic -->
-                    </div>
-                </div>
             </div>
         </section>
 
@@ -442,7 +396,6 @@
         let selectedYear = "2026";
         let yearlyGoal = 12;
         let activeFilter = "all";
-        let activeGeneratedReportValue = "";
         let audioContext = null;
 
         // Current item referenced inside modals
@@ -471,28 +424,6 @@
                     '"': '&quot;'
                 }[tag] || tag)
             );
-        }
-
-        // Robust fetch wrapper with automatic exponential backoff
-        async function queryGeminiAPI(url, options, maxRetries = 5) {
-            let delay = 1000;
-            for (let i = 0; i < maxRetries; i++) {
-                try {
-                    const response = await fetch(url, options);
-                    if (response.ok) {
-                        return await response.json();
-                    }
-                    if (response.status === 429 || response.status >= 500) {
-                        throw new Error(`Retrying due to status: ${response.status}`);
-                    }
-                    const text = await response.text();
-                    throw new Error(`API returned error status ${response.status}: ${text}`);
-                } catch (error) {
-                    if (i === maxRetries - 1) throw error;
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                    delay *= 2; // Exponential backoff scaling
-                }
-            }
         }
 
         // On Load Initialization
@@ -658,15 +589,6 @@
 
             // Import File input Action
             document.getElementById('importBackupFile').addEventListener('change', importLibraryJSON);
-
-            // AI Reading insights triggers
-            document.getElementById('generateInsightsBtn').addEventListener('click', renderAIInsightsReport);
-            document.getElementById('voiceSynthBtn').addEventListener('click', synthesizeReportSpeech);
-            document.getElementById('clearInsightsBtn').addEventListener('click', () => {
-                document.getElementById('aiAnalysisOutputContainer').classList.add('hidden');
-                document.getElementById('voiceSynthBtn').classList.add('hidden');
-                activeGeneratedReportValue = "";
-            });
         }
 
         // Star display controller
@@ -825,7 +747,7 @@
             `;
         }
 
-        // Render main Dashboard shelf UI elements
+        // Render main Shelf UI elements without AI plot helper triggers
         function renderShelfUI() {
             const grid = document.getElementById('booksGridContainer');
             const emptyScr = document.getElementById('emptyShelfScreen');
@@ -929,13 +851,7 @@
                         </div>
                     </div>
 
-                    <div class="mt-4 pt-3 border-t border-stone-100 flex items-center justify-between">
-                        <!-- AI Helper tool inside Card for individual notes summary -->
-                        <button class="ai-summary-btn text-[10px] bg-amber-500/10 text-amber-800 font-bold py-1 px-2.5 rounded-lg hover:bg-amber-500/20 transition-all flex items-center gap-1" data-id="${book.id}">
-                            <i class="fa-solid fa-wand-magic-sparkles text-[9px]"></i>
-                            <span>AI Plot Summary</span>
-                        </button>
-
+                    <div class="mt-4 pt-3 border-t border-stone-100 flex items-center justify-end">
                         <div class="flex items-center gap-1.5">
                             <button class="edit-btn text-xs text-stone-500 hover:text-stone-900 bg-stone-100 hover:bg-stone-200 p-2 rounded-lg transition-all" data-id="${book.id}" title="Edit Log">
                                 <i class="fa-solid fa-pen"></i>
@@ -952,13 +868,6 @@
             });
 
             // Bind card inline button listeners dynamically (Avoid inline handlers)
-            grid.querySelectorAll('.ai-summary-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const id = e.currentTarget.getAttribute('data-id');
-                    synthesizeBookPlotSummaryAI(id);
-                });
-            });
-
             grid.querySelectorAll('.edit-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const id = e.currentTarget.getAttribute('data-id');
@@ -1016,28 +925,28 @@
             });
 
             // Calculate progress to next milestone
-        for (let i = 0; i < ACH_MILESTONES.length; i++) {
-            const milestone = ACH_MILESTONES[i];
-            if (completedCount < milestone.limit) {
-                const remaining = milestone.limit - completedCount;
-                nextMilestoneHintText = `${remaining} completed books to unlock "${milestone.title}"`;
-                break;
+            for (let i = 0; i < ACH_MILESTONES.length; i++) {
+                const milestone = ACH_MILESTONES[i];
+                if (completedCount < milestone.limit) {
+                    const remaining = milestone.limit - completedCount;
+                    nextMilestoneHintText = `${remaining} completed books to unlock "${milestone.title}"`;
+                    break;
+                }
             }
+
+            // Trigger victory chime if rank increases
+            const previousSavedRank = localStorage.getItem('aurabook_prior_level_badge');
+            if (previousSavedRank && previousSavedRank !== activeRank && completedCount > 0) {
+                triggerAchievementChime();
+                showSystemToast(`🎉 Rank Promoted: You are now a "${activeRank}"!`, "success");
+            }
+            localStorage.setItem('aurabook_prior_level_badge', activeRank);
+
+            document.getElementById('activeRankBadge').innerText = activeRank;
+            document.getElementById('nextMedalHint').innerText = nextMilestoneHintText;
         }
 
-        // Trigger victory chime if rank increases
-        const previousSavedRank = localStorage.getItem('aurabook_prior_level_badge');
-        if (previousSavedRank && previousSavedRank !== activeRank && completedCount > 0) {
-            triggerAchievementChime();
-            showSystemToast(`🎉 Rank Promoted: You are now a "${activeRank}"!`, "success");
-        }
-        localStorage.setItem('aurabook_prior_level_badge', activeRank);
-
-        document.getElementById('activeRankBadge').innerText = activeRank;
-        document.getElementById('nextMedalHint').innerText = nextMilestoneHintText;
-    }
-
-    // Export data to raw JSON
+        // Export data to raw JSON
         function exportLibraryJSON() {
             try {
                 const state = {
@@ -1087,171 +996,6 @@
                 }
             };
             reader.readAsText(file);
-        }
-
-        // Individual AI book summary engine using gemini-2.5-flash-preview-09-2025
-        async function synthesizeBookPlotSummaryAI(id) {
-            const targetBook = books.find(b => b.id === id);
-            if (!targetBook) return;
-
-            showSystemToast(`Asking Gemini for summary on "${targetBook.title}"...`, "info");
-            
-            const promptStr = `Provide a concise, high-impact 3-sentence plot synopsis or main theme overview for the book "${targetBook.title}" written by "${targetBook.author}". Keep it spoiler-free, and draft the text in the book's title language if non-English.`;
-            
-            try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-                const responseData = await queryGeminiAPI(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: promptStr }] }],
-                        systemInstruction: { parts: [{ text: "You are an elite, comforting literature scholar. Do not use complex markdown tags." }] }
-                    })
-                });
-
-                const reply = responseData.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (reply) {
-                    targetBook.notes = reply.trim();
-                    saveShelfState();
-                    renderShelfUI();
-                    showSystemToast(`AI Synopsis applied to "${targetBook.title}"!`, "success");
-                }
-            } catch (err) {
-                console.error("AI Plot call failed: ", err);
-                showSystemToast("Failed to communicate with the Gemini API.", "error");
-            }
-        }
-
-        // Dynamic Generative Reading Habits Evaluation (gemini-2.5-flash-preview-09-2025)
-        async function renderAIInsightsReport() {
-            const yearFiltered = books.filter(b => b.year === selectedYear);
-            if (yearFiltered.length === 0) {
-                showSystemToast("Please log at least one book to analyze reading trends.", "warning");
-                return;
-            }
-
-            const btnText = document.getElementById('insightsBtnText');
-            const originalHTML = btnText.innerHTML;
-            btnText.innerText = "Analyzing habits...";
-
-            // Create contextual layout
-            const formattedList = yearFiltered.map(b => `- "${b.title}" by ${b.author} [Category: ${b.category}, Rating: ${b.rating}/5, Notes: ${b.notes || ''}]`).join('\n');
-            const promptContext = `Analyze my personal logged books list for ${selectedYear} to evaluate my taste preferences, thematic trends (such as growth, drama, science fiction, philosophy), and provide exactly 5 beautiful recommended book matches with a 1-sentence sales pitch for each.\n\nReading Log:\n${formattedList}`;
-
-            try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-                const responseData = await queryGeminiAPI(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: promptContext }] }],
-                        systemInstruction: { parts: [{ text: "You are the Interactive Reading Accomplishment Tracker's lead scholar. Deliver inspiring, academic, warm personal assessments. Break down paragraphs and use clear bullets for recommendations." }] }
-                    })
-                });
-
-                const generatedReport = responseData.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (generatedReport) {
-                    activeGeneratedReportValue = generatedReport;
-                    
-                    document.getElementById('aiAnalysisBody').innerHTML = parseSimpleMarkdown(generatedReport);
-                    document.getElementById('aiAnalysisOutputContainer').classList.remove('hidden');
-                    document.getElementById('voiceSynthBtn').classList.remove('hidden');
-                    
-                    showSystemToast("AI Reading Analysis populated!", "success");
-                }
-            } catch (err) {
-                console.error("Habit Analysis failed: ", err);
-                showSystemToast("Could not load AI Insights at this moment.", "error");
-            } finally {
-                btnText.innerHTML = originalHTML;
-            }
-        }
-
-        // Text-to-Speech companion via gemini-2.5-flash-preview-tts
-        async function synthesizeReportSpeech() {
-            if (!activeGeneratedReportValue) return;
-
-            const voiceBtn = document.getElementById('voiceSynthBtn');
-            const originalHTML = voiceBtn.innerHTML;
-            voiceBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Loading speech...`;
-
-            try {
-                // Strip markdown styling tags before rendering voice audio
-                const cleanPromptText = activeGeneratedReportValue.replace(/[*_#\-]/g, '');
-                const truncatedPromptText = cleanPromptText.substring(0, 450); // Standard clip limit to maintain lightning fast performance
-
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
-                const responseData = await queryGeminiAPI(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: `Read with absolute warmth and intelligence: ${truncatedPromptText}` }] }],
-                        generationConfig: {
-                            responseModalities: ["AUDIO"],
-                            speechConfig: {
-                                voiceConfig: {
-                                    prebuiltVoiceConfig: {
-                                        voiceName: "Aura" // Elite resident literary voice
-                                    }
-                                }
-                            }
-                        }
-                    })
-                });
-
-                const audioBase64Bytes = responseData.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-                if (audioBase64Bytes) {
-                    playRawPCMAudio(audioBase64Bytes);
-                    showSystemToast("Aura AI speech summary playing!", "success");
-                } else {
-                    throw new Error("Empty sound payload returned");
-                }
-
-            } catch (err) {
-                console.error("Speech Synthesis failed: ", err);
-                showSystemToast("Could not synthesize companion voice audio.", "error");
-            } finally {
-                voiceBtn.innerHTML = originalHTML;
-            }
-        }
-
-        // Convert base64 PCM array buffer down to native play sound nodes
-        function playRawPCMAudio(base64Data) {
-            try {
-                const binaryString = atob(base64Data);
-                const bytes = new Uint8Array(binaryString.length);
-                for (let i = 0; i < binaryString.length; i++) {
-                    bytes[i] = binaryString.charCodeAt(i);
-                }
-
-                // Convert PCM16 array down to Float32 spectrum elements
-                const int16Buffer = new Int16Array(bytes.buffer);
-                const float32Buffer = new Float32Array(int16Buffer.length);
-                for (let i = 0; i < int16Buffer.length; i++) {
-                    float32Buffer[i] = int16Buffer[i] / 32768.0;
-                }
-
-                // Native web-context stream playback initialization
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const audioBuffer = audioCtx.createBuffer(1, float32Buffer.length, 24000); // Standard Gemini TTS sample rate output
-                audioBuffer.getChannelData(0).set(float32Buffer);
-
-                const source = audioCtx.createBufferSource();
-                source.buffer = audioBuffer;
-                source.connect(audioCtx.destination);
-                source.start();
-
-            } catch (err) {
-                console.error("PCM decoding failed: ", err);
-            }
-        }
-
-        // Simple markdown parsing fallback compiler
-        function parseSimpleMarkdown(md) {
-            return md
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                .replace(/\n/g, '<br/>');
         }
 
         // Custom non-blocking visual Toast notification
